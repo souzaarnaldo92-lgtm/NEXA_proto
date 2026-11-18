@@ -1,0 +1,13 @@
+
+{
+  "name": "nexa",
+  "version": "0.7.0",
+  "private": true,
+  "description": "NEXA - Plataforma de proteção e gestão",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
