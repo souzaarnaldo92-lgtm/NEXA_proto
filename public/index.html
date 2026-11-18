@@ -1,0 +1,61 @@
+<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#5B3FA0"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="NEXA"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/icon.svg"><title>NEXA</title>
+<style>
+:root{--bg:#F6F4FA;--s:#fff;--ink:#1F1B2E;--mu:#5E5873;--ln:#DDD7EA;--br:#5B3FA0;--bs:#E9E3F5;--al:#C81E45;--ai:#fff;--ok:#1F7A5C;--oks:#DDF1EA;--wn:#FFF1D6}
+@media(prefers-color-scheme:dark){:root{--bg:#14111F;--s:#1E1A2E;--ink:#F1EEF9;--mu:#B5AECB;--ln:#352F4B;--br:#B79CF2;--bs:#2B2445;--al:#F0577B;--ai:#1A0610;--ok:#5FCFA6;--oks:#17332A;--wn:#3A2E12}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,sans-serif;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+main{max-width:420px;margin:0 auto;padding:16px;display:flex;flex-direction:column;gap:14px;min-height:100vh}
+header{display:flex;justify-content:space-between;align-items:center}h1{font-size:1.1rem;margin:0}h2{margin:0;font-size:1.2rem}
+button,select,input{font:inherit;color:inherit}button{cursor:pointer}:focus-visible{outline:3px solid var(--br);outline-offset:2px}
+.b{border:1.5px solid var(--br);background:var(--br);color:var(--s);border-radius:12px;padding:12px 16px;font-weight:700;min-height:48px;text-align:center;text-decoration:none;display:block}
+.b.g{background:none;color:var(--br)}.b.c{background:var(--ok);border-color:var(--ok)}.b.x{background:none;border-color:var(--ln);color:var(--mu);min-height:40px;padding:6px 12px;font-weight:400}
+.sos{margin:8px auto;width:220px;height:220px;border-radius:50%;border:0;background:var(--al);color:var(--ai);font-size:1.5rem;font-weight:700;box-shadow:0 0 0 12px color-mix(in srgb,var(--al) 18%,transparent)}
+.mu{color:var(--mu);font-size:.92rem;margin:0}.warn{background:var(--wn);padding:10px 12px;border-radius:10px;font-size:.92rem}
+.n{font-size:5rem;font-weight:700;text-align:center;line-height:1}.pr{font-size:1.3rem;font-weight:700;letter-spacing:.04em}
+ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}li{border:1.5px solid var(--ln);border-radius:10px;padding:8px 12px;color:var(--mu)}li.on{border-color:var(--ok);background:var(--oks);color:var(--ink)}
+label{display:flex;flex-direction:column;gap:4px;font-size:.92rem}select,input{padding:10px;border:1.5px solid var(--ln);border-radius:10px;background:var(--s)}
+.o{display:flex;flex-wrap:wrap;gap:8px}.o button{border:1.5px solid var(--ln);background:var(--s);border-radius:999px;padding:8px 14px;min-height:44px}.o button.on{border-color:var(--br);background:var(--bs);font-weight:700}
+.card{background:var(--s);border:1.5px solid var(--ln);border-radius:12px;padding:14px}
+.actions{display:grid;gap:9px}.small{font-size:.82rem}
+a.b{box-sizing:border-box}.demo{border:1px solid #d5a33a;background:var(--wn);color:var(--ink);border-radius:10px;padding:11px 12px;font-size:.88rem}.install{display:none}.install.show{display:block}.brand{display:flex;align-items:center;gap:8px}.brand img{width:32px;height:32px}
+
+</style></head><body><main id="app"></main>
+<script>
+const $=s=>document.querySelector(s),esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ls={get(k,d){try{return localStorage.getItem(k)||d}catch{return d}},set(k,v){try{localStorage.setItem(k,v)}catch{}}};
+const PN={A:'Sem cadastro',B:'Cadastrada',C:'Com medida protetiva'};
+let S={v:'home',n:5,t:null,posP:null,pos:null,res:null,poll:null,kind:''};
+const clear=()=>{clearInterval(S.t);clearInterval(S.poll)};
+const go=v=>{S.v=v;render()};
+const getPos=()=>new Promise(r=>{if(!navigator.geolocation)return r(null);navigator.geolocation.getCurrentPosition(p=>r({lat:p.coords.latitude,lng:p.coords.longitude,acc:Math.round(p.coords.accuracy)}),()=>r(null),{enableHighAccuracy:true,timeout:8000,maximumAge:10000})});
+function start(){S.n=5;S.posP=getPos();go('count');S.t=setInterval(()=>{S.n--;S.n<=0?fire():render()},1000)}
+async function fire(){clear();go('sending');const pos=await S.posP;S.pos=pos;
+ try{const c=new AbortController();setTimeout(()=>c.abort(),10000);
+  const r=await fetch('/api/alert',{method:'POST',headers:{'Content-Type':'application/json'},signal:c.signal,body:JSON.stringify({...(pos||{}),profile:ls.get('p','A')})});
+  if(!r.ok)throw 0;S.res=await r.json();go('result');
+  S.poll=setInterval(async()=>{try{const x=await(await fetch('/api/alert/'+S.res.protocol)).json();S.res.status=x.status;S.res.dispatch=x.dispatch;if(S.v==='result')render()}catch{}},4000)
+ }catch{S.res=null;go('fail')}}
+function render(){const p=ls.get('p','A'),disc=ls.get('d')==='1';document.title=disc?'Notas':'NEXA';let h='';
+ const head='<header><div class="brand"><img src="/icon.svg" alt=""><h1>'+(disc?'Notas':'NEXA')+'</h1></div><button class="b x" id="exit" type="button">Saída rápida</button></header>';
+ if(S.v==='home')h='<button class="b g install" id="install" type="button">Instalar NEXA no celular</button><div class="demo"><b>Protótipo em ambiente de teste.</b> Pedidos enviados aqui não chegam à polícia, à Guarda Municipal ou a uma central real. Em situação de perigo, ligue 190.</div><div class="card"><p class="mu">NEXA Proteção</p><h2>Você não está sozinha.</h2><p class="mu">Acesse orientações e canais de proteção ou faça uma simulação de solicitação.</p></div><div class="actions"><a class="b c" href="tel:190">Ligar 190 — emergência</a><button class="sos" id="sos" type="button">Simular pedido<br>de ajuda</button><p class="mu small" style="text-align:center">A simulação registra um pedido fictício neste protótipo.</p><button class="b g" id="help" type="button">Orientações e canais de atendimento</button><button class="b g" id="cfg" type="button">Configurações e contato de confiança</button></div>';
+ if(S.v==='count')h='<div class="demo"><b>Simulação — nenhum órgão será acionado.</b> Este ambiente não presta atendimento emergencial.</div><h2>Simulação em…</h2><div class="n" aria-live="assertive">'+S.n+'</div><button class="b" id="now" type="button">Registrar simulação agora</button><button class="b g" id="cancel" type="button">Cancelar</button>';
+ if(S.v==='help')h='<h2>Orientações e canais de atendimento</h2><div class="card"><b>Perigo imediato</b><p class="mu">Se você estiver em perigo agora, procure um local seguro se puder e ligue 190. Não espere uma resposta deste protótipo.</p><a class="b c" href="tel:190">Ligar 190</a></div><div class="card"><b>Central de Atendimento à Mulher — 180</b><p class="mu">Canal nacional para orientação, acolhimento e registro de denúncias de violência contra mulheres.</p><a class="b g" href="tel:180">Ligar 180</a></div><div class="card"><b>Segurança digital</b><p class="mu">Se alguém monitora seu aparelho, considere usar um dispositivo seguro. Apagar o histórico pode não eliminar todos os registros de uso.</p></div><button class="b g" id="back" type="button">Voltar</button>';
+ if(S.v==='sending')h='<h2>Enviando pedido…</h2><p class="mu">Obtendo localização e enviando.</p><a class="b c" href="tel:190">Ligar 190</a>';
+ if(S.v==='fail')h='<div class="warn"><b>Não foi possível registrar a simulação.</b> A simulação pode não ter sido registrada. Este protótipo não presta atendimento emergencial.</div><a class="b c" href="tel:190">Ligar 190</a><button class="b" id="retry" type="button">Tentar de novo</button><button class="b g" id="back" type="button">Voltar</button>';
+ if(S.v==='result'){const r=S.res,conf=r.dispatch.some(d=>d.confirmado),box=r.mode==='sandbox'?'<div class="warn"><b>AMBIENTE DE TESTE:</b> este alerta não chegou a nenhum órgão real. Em emergência, ligue 190.</div>':(conf?'':'<div class="warn">Simulação registrada no servidor de teste. Nenhum órgão foi acionado.</div>');
+  const c=ls.get('c','').replace(/\D/g,''),wa=(c&&S.pos&&p!=='A')?'<a class="b g" target="_blank" rel="noopener" href="https://wa.me/55'+c+'?text='+encodeURIComponent('Preciso de ajuda. Minha localização: https://maps.google.com/?q='+S.pos.lat+','+S.pos.lng)+'">Avisar meu contato de confiança</a>':'';
+  h=box+'<div>Protocolo<div class="pr">'+esc(r.protocol)+'</div><p class="mu">Situação: '+esc(r.status)+(r.semLocalizacao?' · sem localização (permissão negada ou sem sinal)':S.pos?' · precisão ~'+S.pos.acc+' m':'')+'</p></div><ul>'+r.dispatch.map(d=>'<li class="'+(d.confirmado?'on':'')+'">'+esc(d.orgao)+': '+(d.confirmado?'confirmado':'não confirmado')+'</li>').join('')+'</ul>'+wa+'<a class="b c" href="tel:190">Ligar 190</a><button class="b g" id="place" type="button">Descrever o local (opcional)</button><button class="b g" id="back" type="button">Voltar ao início</button>'}
+ if(S.v==='place')h='<h2>Onde foi?</h2><p class="mu">Opcional. Não gera ponto exato em mapa público.</p><div class="o" id="o">'+['Via pública','Transporte','Estabelecimento','Residência','Outro'].map(k=>'<button type="button" class="'+(S.kind===k?'on':'')+'">'+k+'</button>').join('')+'</div><button class="b" id="sendk" type="button">Enviar resposta</button><button class="b g" id="back" type="button">Pular</button>';
+ if(S.v==='cfg')h='<h2>Perfil e configurações</h2><label>Perfil<select id="pp">'+Object.keys(PN).map(k=>'<option value="'+k+'"'+(k===p?' selected':'')+'>'+PN[k]+'</option>').join('')+'</select></label><label>Contato de confiança (WhatsApp, com DDD)<input id="cc" inputmode="tel" value="'+esc(ls.get('c',''))+'" placeholder="81999999999"></label><label><span><input type="checkbox" id="dd"'+(disc?' checked':'')+'> Modo discreto (título neutro)</span></label><p class="mu">Perfil C é declarado aqui; a verificação da medida protetiva é feita pela central. Nenhum pedido é negado por falta de verificação.</p><button class="b" id="back" type="button">Salvar e voltar</button>';
+ $('#app').innerHTML=head+h;bind()}
+function bind(){const q=i=>document.getElementById(i);
+ q('exit').onclick=()=>{clear();location.replace('https://www.google.com.br')};
+ if(q('sos'))q('sos').onclick=start;if(q('now'))q('now').onclick=fire;if(q('cancel'))q('cancel').onclick=()=>{clear();go('home')};
+ if(q('loc'))q('loc').onclick=async()=>{const r=await getPos();q('loc').textContent=r?'Localização ativada (±'+r.acc+' m)':'Não foi possível obter a localização. Verifique a permissão.'};
+ if(q('cfg'))q('cfg').onclick=()=>go('cfg');if(q('help'))q('help').onclick=()=>go('help');if(q('retry'))q('retry').onclick=start;if(q('place'))q('place').onclick=()=>go('place');
+ if(q('o'))q('o').onclick=e=>{if(e.target.tagName==='BUTTON'){S.kind=e.target.textContent;render()}};
+ if(q('sendk'))q('sendk').onclick=async()=>{try{await fetch('/api/alert/'+S.res.protocol+'/place',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({kind:S.kind})})}catch{}go('home')};
+ if(q('back'))q('back').onclick=()=>{if(S.v==='cfg'){ls.set('p',q('pp').value);ls.set('c',q('cc').value);ls.set('d',q('dd').checked?'1':'0')}clear();go('home')}}
+if('serviceWorker'in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});
+render();
+</script></body></html>

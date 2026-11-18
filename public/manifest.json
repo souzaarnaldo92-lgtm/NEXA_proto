@@ -1,0 +1,25 @@
+{
+  "id": "/",
+  "name": "NEXA Proteção",
+  "short_name": "NEXA",
+  "description": "Protótipo de aplicativo de orientação e simulação de solicitação de ajuda.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F6F4FA",
+  "theme_color": "#5B3FA0",
+  "lang": "pt-BR",
+  "categories": [
+    "health",
+    "social"
+  ],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

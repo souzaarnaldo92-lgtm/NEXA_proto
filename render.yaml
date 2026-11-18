@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: nexa-demonstracao
+    runtime: node
+    plan: free
+    buildCommand: ""
+    startCommand: node server.js
+    healthCheckPath: /
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: NEXA_ADMIN_PASSWORD
+        generateValue: true
+      - key: INTEGRATION_MODE
+        value: sandbox
