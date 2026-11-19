@@ -1,6 +1,6 @@
 'use strict';
 // NEXA — gateway de teste (Node 18+, sem dependências).
-const http=require('http'),fs=require('fs'),path=require('path'),crypto=require('crypto');
+const http=require('http'),https=require('https'),fs=require('fs'),path=require('path'),crypto=require('crypto');
 const PORT=+process.env.PORT||3000,DATA=path.join(__dirname,'data'),PUB=path.join(__dirname,'public');
 const RETENTION_DAYS=+process.env.RETENTION_DAYS||30,MODE=process.env.INTEGRATION_MODE||'sandbox';
 fs.mkdirSync(DATA,{recursive:true});
@@ -34,7 +34,9 @@ const can=(req,roles)=>{const u=currentUser(req);return !!u&&roles.includes(u.ro
 const num=(v,lo,hi)=>typeof v==='number'&&v>=lo&&v<=hi?v:null;
 const cellOf=(lat,lng)=>[Math.floor(lat/.01)*.01,Math.floor(lng/.01)*.01].map(x=>+x.toFixed(2));
 const MIME={'.html':'text/html; charset=utf-8','.js':'text/javascript','.json':'application/json','.svg':'image/svg+xml'};
-const CSP="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'";
+const CSP="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com; style-src 'self' 'unsafe-inline' https://unpkg.com; img-src 'self' data: https://*.tile.openstreetmap.org; connect-src 'self';";
+let boundaryCache=null,boundaryCacheAt=0;
+const getJson=url=>new Promise((resolve,reject)=>{https.get(url,{headers:{'User-Agent':'NEXA-Demonstracao/0.8'}},r=>{if(r.statusCode!==200){r.resume();return reject(new Error('Fonte cartográfica indisponível ('+r.statusCode+')'))}let data='';r.setEncoding('utf8');r.on('data',c=>{data+=c;if(data.length>8e6){r.destroy();reject(new Error('Arquivo territorial excede o limite'))}});r.on('end',()=>{try{resolve(JSON.parse(data))}catch{reject(new Error('Resposta cartográfica inválida'))}})}).on('error',reject)});
 
 http.createServer(async(req,res)=>{
  const u=new URL(req.url,'http://x'),p=u.pathname,ip=req.socket.remoteAddress;
@@ -56,11 +58,26 @@ http.createServer(async(req,res)=>{
   if(m){const r=ops.find(o=>o.id===m[1]);if(!r)return send(res,404,{erro:'protocolo não encontrado'});
    if(req.method==='GET'&&!m[2])return send(res,200,{status:r.status,dispatch:r.dispatch});
    if(req.method==='PATCH'&&m[2]){const b=await body(req);if(['Via pública','Transporte','Estabelecimento','Residência','Outro'].includes(b.kind)){r.place=b.kind;save()}return send(res,200,{ok:true})}}
+  if(req.method==='GET'&&p==='/api/territory/boundaries'){
+   if(!can(req,['administrador','coordenação','consulta']))return send(res,403,{erro:'perfil sem permissão'});
+   if(boundaryCache&&Date.now()-boundaryCacheAt<864e5)return send(res,200,boundaryCache);
+   try{
+    const catalog=await getJson('https://dados.recife.pe.gov.br/api/3/action/package_show?id=mapas-de-limites-e-divisoes-territoriais');
+    if(!catalog.success)return send(res,502,{erro:'Catálogo territorial oficial indisponível'});
+    const resources=catalog.result.resources||[];
+    const findResource=re=>resources.find(x=>re.test((x.name||'')+' '+(x.description||''))&&/geojson/i.test((x.format||'')+' '+(x.mimetype||'')))||resources.find(x=>re.test(x.name||''));
+    const rb=findResource(/limites dos bairros/i),rr=findResource(/limites por rpa/i);
+    if(!rb||!rr)return send(res,502,{erro:'Limites de bairros ou RPAs não encontrados no catálogo oficial'});
+    const [bairro,rpa]=await Promise.all([getJson(rb.url),getJson(rr.url)]);
+    if(!bairro.features||!rpa.features)return send(res,502,{erro:'Arquivos territoriais oficiais inválidos'});
+    boundaryCache={bairro,rpa,source:'Prefeitura do Recife — Portal de Dados Abertos (GeoJSON 2023, licença ODbL)'};boundaryCacheAt=Date.now();return send(res,200,boundaryCache);
+   }catch{return send(res,502,{erro:'Não foi possível obter os limites oficiais agora. Tente novamente mais tarde.'})}
+  }
   if(req.method==='GET'&&p==='/api/territory'){
    if(!can(req,['administrador','coordenação','consulta']))return send(res,403,{erro:'perfil sem permissão'});
    const k=Math.max(+u.searchParams.get('k')||5,3),g={};
    an.forEach(a=>{const key=a.cell.join(',');g[key]=(g[key]||0)+1});
-   const cells=Object.entries(g).filter(([,n])=>n>=k).map(([c,n])=>({lat:+c.split(',')[0],lng:+c.split(',')[1],count:n}));
+   const cells=Object.entries(g).filter(([,n])=>n>=k).map(([c,n])=>({lat:+(Number(c.split(',')[0])+.005).toFixed(5),lng:+(Number(c.split(',')[1])+.005).toFixed(5),count:n}));
    return send(res,200,{k,cells,ocultas:Object.keys(g).length-cells.length})}
   if(p.startsWith('/api/console/')){
    if(!auth(req))return send(res,401,{erro:'não autorizado'});
