@@ -1,4 +1,4 @@
-# NEXA — pacote de demonstração para publicação gratuita
+# NEXA v0.8.1 — pacote de demonstração com localização dos acionamentos
 
 Este projeto é um protótipo demonstrativo. Não utilizar com dados reais nem como serviço de emergência.
 
@@ -48,3 +48,23 @@ NEXA_ADMIN_PASSWORD='senha-de-demonstracao' node server.js
 ```
 
 Acesse `http://localhost:3000` e `http://localhost:3000/console`.
+
+
+## Inteligência territorial v0.8
+
+A interface de gestão incorpora mapa interativo com seleção entre bairros e RPAs, além de camada de células geográficas agregadas (~1 km). Os limites são obtidos pelo servidor a partir do Portal de Dados Abertos da Prefeitura do Recife (GeoJSON 2023; licença ODbL) e mantidos em cache em memória por 24 horas. A visualização coroplética soma células agregadas dentro dos polígonos e suprime unidades abaixo do mínimo configurado (padrão 5). A camada de células mostra apenas centroides aproximados das células, nunca coordenadas individuais.
+
+A cartografia usa Leaflet e tiles do OpenStreetMap via CDN/serviço externo; portanto, a visualização do mapa requer conexão com a internet. A API territorial exige autenticação e os perfis autorizados já definidos no sistema.
+
+**Limitação importante:** a visualização só exibirá concentrações quando existirem dados agregados suficientes. No protótipo recém-publicado, a ausência de dados é normal. Não inserir ocorrências reais ou dados identificáveis.
+
+
+## Correção v0.8.1 — localização dos acionamentos
+
+O aplicativo solicita a geolocalização com alta precisão e sem reutilizar posição em cache (`maximumAge: 0`). Quando obtida, latitude, longitude e precisão estimada são enviadas junto ao protocolo. A tela de resultado informa as coordenadas registradas.
+
+O painel NEXA Gestão possui uma camada específica para os pontos individuais, com protocolo, horário, situação e precisão estimada no marcador. A camada pode ser ligada ou desligada independentemente das células agregadas. A consulta dos pontos individuais exige autenticação e perfil operacional (administrador, coordenação ou profissional); o perfil de consulta não recebe coordenadas individuais.
+
+A localização depende de permissão do navegador, GPS/sensores disponíveis, HTTPS e condições do aparelho. Se a pessoa negar a permissão ou o aparelho não conseguir obter a posição, o pedido poderá ser registrado sem coordenadas. A precisão exibida é a informada pelo dispositivo, não uma garantia de localização do endereço ou do imóvel.
+
+**Atenção:** coordenadas exatas são dados de alta sensibilidade. Esta versão continua sendo exclusivamente demonstrativa. Não utilizar dados reais, não publicar o painel e não considerar a integração com órgãos públicos como operacional.

@@ -144,7 +144,13 @@ http.createServer(async(req,res)=>{
     const item={id:'ENC-'+crypto.randomBytes(3).toString('hex').toUpperCase(),protocol:op.id,serviceId:sv.id,serviceName:sv.name,kind:String(b.kind||'encaminhamento').slice(0,80),status:'registrado',note:String(b.note||'').trim().slice(0,500),pending:'',feedback:[],history:[{at:Date.now(),action:'Encaminhamento registrado',by:'operador'}],createdAt:Date.now(),createdBy:'operador'};
     referrals.push(item);op.status='encaminhado';(op.history||(op.history=[])).push({at:Date.now(),action:'Encaminhamento registrado para '+sv.name,by:'operador'});save();return send(res,201,item);
    }
-   if(req.method==='GET'&&p==='/api/console/alerts')return send(res,200,ops.slice(-100).reverse());
+   if(req.method==='GET'&&p==='/api/console/alert-locations'){
+    if(!can(req,['administrador','coordenação','profissional']))return send(res,403,{erro:'perfil sem permissão'});
+    const points=ops.filter(o=>!o.semLocalizacao&&Number.isFinite(o.lat)&&Number.isFinite(o.lng))
+      .map(o=>({protocol:o.id,ts:o.ts,lat:o.lat,lng:o.lng,acc:o.acc,status:o.status,priority:o.priority}));
+    return send(res,200,{points});
+   }
+  if(req.method==='GET'&&p==='/api/console/alerts')return send(res,200,ops.slice(-100).reverse());
    m=p.match(/^\/api\/console\/alerts\/(NX-[0-9A-F]{6})$/);
    if(m&&req.method==='POST'){const b=await body(req),r=ops.find(o=>o.id===m[1]);
     if(!r)return send(res,404,{erro:'protocolo não encontrado'});
