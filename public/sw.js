@@ -1,4 +1,4 @@
-const CACHE='nexa-app-v081';
+const CACHE='nexa-app-v082';
 const SHELL=['/','/manifest.json','/icon.svg'];
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)));
@@ -11,7 +11,7 @@ self.addEventListener('activate',event=>{
 self.addEventListener('fetch',event=>{
   const request=event.request;
   const url=new URL(request.url);
-  if(request.method!=='GET' || url.pathname.startsWith('/api/')) return;
+  if(request.method!=='GET' || url.pathname.startsWith('/api/') || url.pathname==='/console' || url.pathname.endsWith('.html') || url.pathname.endsWith('.js') || url.pathname.endsWith('.css')) return;
   event.respondWith(fetch(request).then(response=>{
     if(response && response.ok){const copy=response.clone();caches.open(CACHE).then(cache=>cache.put(request,copy));}
     return response;
