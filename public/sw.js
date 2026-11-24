@@ -1,4 +1,4 @@
-const CACHE='nexa-app-v07';
+const CACHE='nexa-app-v081';
 const SHELL=['/','/manifest.json','/icon.svg'];
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)));
