@@ -1,4 +1,4 @@
-# NEXA v0.8.2 — pacote de demonstração com localização dos acionamentos
+# NEXA v0.8.3 — pacote de demonstração com localização dos acionamentos
 
 Este projeto é um protótipo demonstrativo. Não utilizar com dados reais nem como serviço de emergência.
 
@@ -54,7 +54,7 @@ Acesse `http://localhost:3000` e `http://localhost:3000/console`.
 
 A interface de gestão incorpora mapa interativo com seleção entre bairros e RPAs, além de camada de células geográficas agregadas (~1 km). Os limites são obtidos pelo servidor a partir do Portal de Dados Abertos da Prefeitura do Recife (GeoJSON 2023; licença ODbL) e mantidos em cache em memória por 24 horas. A visualização coroplética soma células agregadas dentro dos polígonos e suprime unidades abaixo do mínimo configurado (padrão 5). A camada de células mostra apenas centroides aproximados das células, nunca coordenadas individuais.
 
-A biblioteca Leaflet é instalada como dependência do projeto e servida localmente pelo próprio servidor. Os tiles cartográficos do OpenStreetMap continuam exigindo conexão com a internet. A API territorial exige autenticação e os perfis autorizados já definidos no sistema.
+A biblioteca Leaflet é instalada como dependência do projeto e servida localmente pelo próprio servidor. O mapa-base oferece CARTO claro como padrão e OpenStreetMap como alternativa selecionável; ambos exigem conexão com a internet. A API territorial exige autenticação e os perfis autorizados já definidos no sistema.
 
 **Limitação importante:** a visualização só exibirá concentrações quando existirem dados agregados suficientes. No protótipo recém-publicado, a ausência de dados é normal. Não inserir ocorrências reais ou dados identificáveis.
 
@@ -79,3 +79,8 @@ A localização depende de permissão do navegador, GPS/sensores disponíveis, H
 - Recursos HTML, JavaScript e CSS do painel não são mantidos em cache pelo navegador.
 
 **Persistência:** o plano gratuito do Render mantém armazenamento efêmero. Registros, usuários e sessões podem ser perdidos em reinicializações ou novos deploys. Para operação institucional, é necessária uma base de dados persistente e infraestrutura apropriada.
+
+
+## Cartografia v0.8.3
+
+O mapa-base utiliza CARTO Positron (com atribuição OpenStreetMap/CARTO) e oferece OpenStreetMap como camada alternativa. Os marcadores operacionais são vermelhos para solicitações recebidas/em avaliação e laranja para atendimento/encaminhamento/acompanhamento. Os limites administrativos continuam sendo carregados da fonte oficial da Prefeitura via GeoJSON; a indisponibilidade temporária dessa fonte não impede a visualização do mapa-base e dos pontos autorizados.
