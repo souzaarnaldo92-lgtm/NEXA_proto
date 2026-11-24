@@ -1,4 +1,4 @@
-# NEXA v0.8.1 — pacote de demonstração com localização dos acionamentos
+# NEXA v0.8.2 — pacote de demonstração com localização dos acionamentos
 
 Este projeto é um protótipo demonstrativo. Não utilizar com dados reais nem como serviço de emergência.
 
@@ -54,7 +54,7 @@ Acesse `http://localhost:3000` e `http://localhost:3000/console`.
 
 A interface de gestão incorpora mapa interativo com seleção entre bairros e RPAs, além de camada de células geográficas agregadas (~1 km). Os limites são obtidos pelo servidor a partir do Portal de Dados Abertos da Prefeitura do Recife (GeoJSON 2023; licença ODbL) e mantidos em cache em memória por 24 horas. A visualização coroplética soma células agregadas dentro dos polígonos e suprime unidades abaixo do mínimo configurado (padrão 5). A camada de células mostra apenas centroides aproximados das células, nunca coordenadas individuais.
 
-A cartografia usa Leaflet e tiles do OpenStreetMap via CDN/serviço externo; portanto, a visualização do mapa requer conexão com a internet. A API territorial exige autenticação e os perfis autorizados já definidos no sistema.
+A biblioteca Leaflet é instalada como dependência do projeto e servida localmente pelo próprio servidor. Os tiles cartográficos do OpenStreetMap continuam exigindo conexão com a internet. A API territorial exige autenticação e os perfis autorizados já definidos no sistema.
 
 **Limitação importante:** a visualização só exibirá concentrações quando existirem dados agregados suficientes. No protótipo recém-publicado, a ausência de dados é normal. Não inserir ocorrências reais ou dados identificáveis.
 
@@ -68,3 +68,14 @@ O painel NEXA Gestão possui uma camada específica para os pontos individuais, 
 A localização depende de permissão do navegador, GPS/sensores disponíveis, HTTPS e condições do aparelho. Se a pessoa negar a permissão ou o aparelho não conseguir obter a posição, o pedido poderá ser registrado sem coordenadas. A precisão exibida é a informada pelo dispositivo, não uma garantia de localização do endereço ou do imóvel.
 
 **Atenção:** coordenadas exatas são dados de alta sensibilidade. Esta versão continua sendo exclusivamente demonstrativa. Não utilizar dados reais, não publicar o painel e não considerar a integração com órgãos públicos como operacional.
+
+
+## Correções v0.8.2
+
+- Leaflet servido localmente, sem dependência do CDN unpkg.
+- O mapa-base do Recife e os marcadores de acionamento continuam disponíveis mesmo se a fonte de limites oficiais estiver temporariamente indisponível.
+- Mensagens de erro da API são apresentadas na interface para facilitar o diagnóstico.
+- O painel de detalhamento recebe foco/rolagem ao abrir uma solicitação.
+- Recursos HTML, JavaScript e CSS do painel não são mantidos em cache pelo navegador.
+
+**Persistência:** o plano gratuito do Render mantém armazenamento efêmero. Registros, usuários e sessões podem ser perdidos em reinicializações ou novos deploys. Para operação institucional, é necessária uma base de dados persistente e infraestrutura apropriada.

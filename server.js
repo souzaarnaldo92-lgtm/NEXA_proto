@@ -33,8 +33,8 @@ const auth=req=>!!currentUser(req);
 const can=(req,roles)=>{const u=currentUser(req);return !!u&&roles.includes(u.role)};
 const num=(v,lo,hi)=>typeof v==='number'&&v>=lo&&v<=hi?v:null;
 const cellOf=(lat,lng)=>[Math.floor(lat/.01)*.01,Math.floor(lng/.01)*.01].map(x=>+x.toFixed(2));
-const MIME={'.html':'text/html; charset=utf-8','.js':'text/javascript','.json':'application/json','.svg':'image/svg+xml'};
-const CSP="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com; style-src 'self' 'unsafe-inline' https://unpkg.com; img-src 'self' data: https://*.tile.openstreetmap.org; connect-src 'self';";
+const MIME={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json; charset=utf-8','.svg':'image/svg+xml'};
+const CSP="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*.tile.openstreetmap.org; connect-src 'self';";
 let boundaryCache=null,boundaryCacheAt=0;
 const getJson=url=>new Promise((resolve,reject)=>{https.get(url,{headers:{'User-Agent':'NEXA-Demonstracao/0.8'}},r=>{if(r.statusCode!==200){r.resume();return reject(new Error('Fonte cartográfica indisponível ('+r.statusCode+')'))}let data='';r.setEncoding('utf8');r.on('data',c=>{data+=c;if(data.length>8e6){r.destroy();reject(new Error('Arquivo territorial excede o limite'))}});r.on('end',()=>{try{resolve(JSON.parse(data))}catch{reject(new Error('Resposta cartográfica inválida'))}})}).on('error',reject)});
 
@@ -170,10 +170,12 @@ http.createServer(async(req,res)=>{
     }
     save();return send(res,200,{ok:true,record:r})}}
   return send(res,404,{erro:'não encontrado'});}
- // estáticos
- const f=p==='/'?'index.html':p==='/console'?'console.html':p.slice(1),fp=path.join(PUB,path.normalize(f));
- if(!fp.startsWith(PUB)||!fs.existsSync(fp)||fs.statSync(fp).isDirectory()){res.writeHead(404);return res.end('404')}
- res.writeHead(200,{'Content-Type':MIME[path.extname(fp)]||'text/plain','Content-Security-Policy':CSP,'X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','Permissions-Policy':'geolocation=(self)'});
+ // Arquivos estáticos; Leaflet é servido localmente pelo pacote npm.
+ let fp,base;
+ if(p.startsWith('/vendor/leaflet/')){const rel=p.slice('/vendor/leaflet/'.length);base=path.join(__dirname,'node_modules','leaflet','dist');fp=path.join(base,path.normalize(rel));}
+ else{const f=p==='/'?'index.html':p==='/console'?'console.html':p.slice(1);base=PUB;fp=path.join(PUB,path.normalize(f));}
+ if(!fp.startsWith(base)||!fs.existsSync(fp)||fs.statSync(fp).isDirectory()){res.writeHead(404);return res.end('404')}
+ res.writeHead(200,{'Content-Type':MIME[path.extname(fp)]||'application/octet-stream','Cache-Control':/\.(html|js|css)$/.test(fp)?'no-cache':'public, max-age=3600','Content-Security-Policy':CSP,'X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','Permissions-Policy':'geolocation=(self)'});
  fs.createReadStream(fp).pipe(res);
  }catch{send(res,400,{erro:'requisição inválida'})}
 }).listen(PORT,()=>console.log(`NEXA em http://localhost:${PORT}  (modo ${MODE})\nGestão: http://localhost:${PORT}/console`));
