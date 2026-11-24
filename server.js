@@ -34,7 +34,7 @@ const can=(req,roles)=>{const u=currentUser(req);return !!u&&roles.includes(u.ro
 const num=(v,lo,hi)=>typeof v==='number'&&v>=lo&&v<=hi?v:null;
 const cellOf=(lat,lng)=>[Math.floor(lat/.01)*.01,Math.floor(lng/.01)*.01].map(x=>+x.toFixed(2));
 const MIME={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json; charset=utf-8','.svg':'image/svg+xml'};
-const CSP="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*.tile.openstreetmap.org https://*.basemaps.cartocdn.com; connect-src 'self';";
+const CSP="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*.tile.openstreetmap.org https://*.basemaps.cartocdn.com; connect-src 'self' https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org;";
 let boundaryCache=null,boundaryCacheAt=0;
 const getJson=url=>new Promise((resolve,reject)=>{https.get(url,{headers:{'User-Agent':'NEXA-Demonstracao/0.8'}},r=>{if(r.statusCode!==200){r.resume();return reject(new Error('Fonte cartográfica indisponível ('+r.statusCode+')'))}let data='';r.setEncoding('utf8');r.on('data',c=>{data+=c;if(data.length>8e6){r.destroy();reject(new Error('Arquivo territorial excede o limite'))}});r.on('end',()=>{try{resolve(JSON.parse(data))}catch{reject(new Error('Resposta cartográfica inválida'))}})}).on('error',reject)});
 
